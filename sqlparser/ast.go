@@ -20,7 +20,9 @@ package sqlparser
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/flike/kingshard/core/hack"
 	"github.com/flike/kingshard/sqltypes"
@@ -549,6 +551,7 @@ const (
 )
 
 func (node *ComparisonExpr) Format(buf *TrackedBuffer) {
+	fmt.Printf("%v %s %v", node.Left, node.Operator, node.Right)
 	buf.Fprintf("%v %s %v", node.Left, node.Operator, node.Right)
 }
 
@@ -631,7 +634,16 @@ func (node NumVal) Format(buf *TrackedBuffer) {
 type ValArg []byte
 
 func (node ValArg) Format(buf *TrackedBuffer) {
-	buf.WriteArg(string(node[1:]))
+	fmt.Println("------------")
+	fmt.Println(string(node[1:]))
+	fmt.Println("------------")
+	tmp := string(node[1:])
+	if tmp == "v1" {
+		buf.WriteArg("?")
+	} else {
+		buf.WriteArg(string(node[1:]))
+	}
+
 }
 
 // NullVal represents a NULL value.
@@ -750,7 +762,12 @@ func (node *FuncExpr) Format(buf *TrackedBuffer) {
 	if node.Distinct {
 		distinct = "distinct "
 	}
-	buf.Fprintf("%s(%s%v)", node.Name, distinct, node.Exprs)
+	if strings.ToLower(string(node.Name)) == "date" {
+		buf.Fprintf("%s%v", distinct, node.Exprs)
+	} else {
+		buf.Fprintf("%s(%s%v)", node.Name, distinct, node.Exprs)
+	}
+	// fmt.Println(buf.Bytes())
 }
 
 // CaseExpr represents a CASE expression.

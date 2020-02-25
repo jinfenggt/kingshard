@@ -69,7 +69,12 @@ func (c *ClientConn) handleStmtPrepare(sql string) error {
 	if err != nil {
 		return fmt.Errorf(`parse sql "%s" error`, sql)
 	}
-
+	buf := sqlparser.NewTrackedBuffer(nil)
+	s.s.Format(buf)
+	fmt.Println(string(buf.Bytes()))
+	if _, flag := s.s.(*sqlparser.Select); flag {
+		sql = string(buf.Bytes())
+	}
 	s.sql = sql
 
 	defaultRule := c.schema.rule.DefaultRule

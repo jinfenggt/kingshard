@@ -52,6 +52,18 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 	}()
 
 	sql = strings.TrimRight(sql, ";") //删除sql语句最后的分号
+	// var stmt sqlparser.Statement
+	stmt, perr := sqlparser.Parse(sql) //解析sql语句,得到的stmt是一个interface
+	if perr == nil {
+		if _, flag := stmt.(*sqlparser.Select); flag {
+			buf := sqlparser.NewTrackedBuffer(nil)
+			stmt.Format(buf)
+			sql = string(buf.Bytes())
+		}
+		// stmt.
+
+		// sql = string(buf.Bytes())
+	}
 	hasHandled, err := c.preHandleShard(sql)
 	if err != nil {
 		golog.Error("server", "preHandleShard", err.Error(), 0,
@@ -64,9 +76,9 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 		return nil
 	}
 
-	var stmt sqlparser.Statement
-	stmt, err = sqlparser.Parse(sql) //解析sql语句,得到的stmt是一个interface
-	if err != nil {
+	// var stmt sqlparser.Statement
+	// stmt, err = sqlparser.Parse(sql) //解析sql语句,得到的stmt是一个interface
+	if perr != nil {
 		golog.Error("server", "parse", err.Error(), 0, "hasHandled", hasHandled, "sql", sql)
 		return err
 	}

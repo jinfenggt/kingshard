@@ -326,7 +326,8 @@ func (c *ClientConn) dispatch(data []byte) error {
 	c.proxy.counter.IncrClientQPS()
 	cmd := data[0]
 	data = data[1:]
-
+	fmt.Printf("%v\n", cmd)
+	fmt.Println(hack.String(data))
 	switch cmd {
 	case mysql.COM_QUIT:
 		c.handleRollback()
