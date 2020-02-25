@@ -289,7 +289,7 @@ type NonStarExpr struct {
 func (node *NonStarExpr) Format(buf *TrackedBuffer) {
 	buf.Fprintf("%v", node.Expr)
 	if node.As != nil {
-		buf.Fprintf(" as %s", node.As)
+		buf.Fprintf(" as `%s`", node.As)
 	}
 }
 
@@ -670,7 +670,7 @@ func escape(buf *TrackedBuffer, name []byte) {
 	if _, ok := keywords[string(name)]; ok {
 		buf.Fprintf("`%s`", name)
 	} else {
-		buf.Fprintf("%s", name)
+		buf.Fprintf("`%s`", name)
 	}
 }
 
