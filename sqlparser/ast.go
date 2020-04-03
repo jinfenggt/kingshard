@@ -289,7 +289,7 @@ type NonStarExpr struct {
 func (node *NonStarExpr) Format(buf *TrackedBuffer) {
 	buf.Fprintf("%v", node.Expr)
 	if node.As != nil {
-		buf.Fprintf(" as `%s`", node.As)
+		buf.Fprintf(" %s", node.As)
 	}
 }
 
@@ -634,9 +634,6 @@ func (node NumVal) Format(buf *TrackedBuffer) {
 type ValArg []byte
 
 func (node ValArg) Format(buf *TrackedBuffer) {
-	fmt.Println("------------")
-	fmt.Println(string(node[1:]))
-	fmt.Println("------------")
 	tmp := string(node[1:])
 	if tmp == "v1" {
 		buf.WriteArg("?")
@@ -670,7 +667,7 @@ func escape(buf *TrackedBuffer, name []byte) {
 	if _, ok := keywords[string(name)]; ok {
 		buf.Fprintf("`%s`", name)
 	} else {
-		buf.Fprintf("`%s`", name)
+		buf.Fprintf("%s", name)
 	}
 }
 
