@@ -15,7 +15,11 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -52,18 +56,45 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 	}()
 
 	sql = strings.TrimRight(sql, ";") //删除sql语句最后的分号
+	pat, err := regexp.Compile("-- Metabase:: userID: ([0-9]+) queryType: ([A-Za-z]+) queryHash: ([A-Za-z0-9]+)")
+	arr := pat.FindAllSubmatch([]byte(sql), -1)
+	var userID string
+	var hash string
+	if err == nil && len(arr) > 0 && len(arr[0]) > 3 {
+		userID = string(arr[0][1])
+		hash = string(arr[0][3])
+	}
+	startTime := time.Now().UnixNano()
+	var errtype string
+	var execErr error
+	uuidstr := fmt.Sprintf("%d", startTime)
+	var neednotify bool
+	parsedsql := sql
+	defer func() {
+		if neednotify {
+			execTime := float64(time.Now().UnixNano()-startTime) / float64(time.Millisecond)
+			go notifyCheelah(execErr, errtype, parsedsql, execTime, userID, hash, uuidstr)
+		}
+	}()
+	comment := "-- mysqlproxy uniqueID: " + uuidstr
+	sql = comment + "\n" + sql
 	// var stmt sqlparser.Statement
 	stmt, perr := sqlparser.Parse(sql) //解析sql语句,得到的stmt是一个interface
 	if perr == nil {
 		if _, flag := stmt.(*sqlparser.Select); flag {
+			neednotify = true
 			buf := sqlparser.NewTrackedBuffer(nil)
 			stmt.Format(buf)
 			sql = string(buf.Bytes())
+			parsedsql = sql
 			// sql = "SELECT * FROM (" + sql + ") a LIMIT 5000"
 		}
-		// stmt.
 
 		// sql = string(buf.Bytes())
+	} else {
+		neednotify = true
+		execErr = perr
+		errtype = "parse-error"
 	}
 	hasHandled, err := c.preHandleShard(sql)
 	if err != nil {
@@ -71,6 +102,8 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 			"sql", sql,
 			"hasHandled", hasHandled,
 		)
+		execErr = err
+		errtype = "exec-error"
 		return err
 	}
 	if hasHandled {
@@ -413,4 +446,41 @@ func (c *ClientConn) mergeExecResult(rs []*mysql.Result) error {
 	c.affectedRows = int64(r.AffectedRows)
 
 	return c.writeOK(r)
+}
+
+func notifyCheelah(err error, errtype string, sql string, duration float64, userID string, hash string, uuid string) {
+	if err == nil && duration < 20000 {
+		return
+	}
+	data := map[string]interface{}{
+		// "msg":      msg,
+		"duration": duration,
+		"userId":   userID,
+		"hash":     hash,
+		"uuid":     uuid,
+		"type":     errtype,
+		"sql":      sql,
+	}
+	if err != nil {
+		data["msg"] = err.Error()
+	}
+	jsonStr, _ := json.Marshal(data)
+	req, err := http.NewRequest("POST", "10.1.1.203:5800", bytes.NewBuffer(jsonStr))
+	if err != nil {
+		fmt.Printf("notify cheelah [%s] error: %s\n", string(jsonStr), err.Error())
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("notify cheelah [%s] error: %s\n", string(jsonStr), err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		fmt.Printf("notify cheelah [%s] error with status[%s]\n", string(jsonStr), resp.Status)
+		return
+	}
+	// if resp.
 }
