@@ -70,14 +70,14 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 	uuidstr := fmt.Sprintf("%d", startTime)
 	var neednotify bool
 	parsedsql := sql
+	comment := "-- mysqlproxy uniqueID: " + uuidstr
+	sql = comment + "\n" + sql
 	defer func() {
 		if neednotify {
 			execTime := float64(time.Now().UnixNano()-startTime) / float64(time.Millisecond)
 			go notifyCheelah(execErr, errtype, parsedsql, execTime, userID, hash, uuidstr)
 		}
 	}()
-	comment := "-- mysqlproxy uniqueID: " + uuidstr
-	sql = comment + "\n" + sql
 	// var stmt sqlparser.Statement
 	stmt, perr := sqlparser.Parse(sql) //解析sql语句,得到的stmt是一个interface
 	if perr == nil {
@@ -87,6 +87,7 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 			stmt.Format(buf)
 			sql = string(buf.Bytes())
 			parsedsql = sql
+			sql = comment + "\n" + sql
 			// sql = "SELECT * FROM (" + sql + ") a LIMIT 5000"
 		}
 
@@ -465,7 +466,7 @@ func notifyCheelah(err error, errtype string, sql string, duration float64, user
 		data["msg"] = err.Error()
 	}
 	jsonStr, _ := json.Marshal(data)
-	req, err := http.NewRequest("POST", "10.1.1.203:5800", bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", "http://10.1.1.203:5800", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		fmt.Printf("notify cheelah [%s] error: %s\n", string(jsonStr), err.Error())
 		return

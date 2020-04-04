@@ -20,7 +20,6 @@ package sqlparser
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -551,7 +550,7 @@ const (
 )
 
 func (node *ComparisonExpr) Format(buf *TrackedBuffer) {
-	fmt.Printf("%v %s %v", node.Left, node.Operator, node.Right)
+	// fmt.Printf("%v %s %v", node.Left, node.Operator, node.Right)
 	buf.Fprintf("%v %s %v", node.Left, node.Operator, node.Right)
 }
 
@@ -764,7 +763,6 @@ func (node *FuncExpr) Format(buf *TrackedBuffer) {
 	} else {
 		buf.Fprintf("%s(%s%v)", node.Name, distinct, node.Exprs)
 	}
-	// fmt.Println(buf.Bytes())
 }
 
 // CaseExpr represents a CASE expression.
