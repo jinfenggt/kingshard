@@ -301,7 +301,7 @@ func (node *NonStarExpr) Format(buf *TrackedBuffer) {
 	buf.Fprintf("%v", node.Expr)
 	if node.As != nil {
 		if _, ok := basictype[string(node.As)]; ok {
-			buf.Fprintf(" %s", node.As)
+			buf.Fprintf("as %s", node.As)
 			return
 		}
 		_, iskeyword := keywords[string(node.As)]
