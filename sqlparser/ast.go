@@ -293,9 +293,17 @@ func containerOther(str []byte) bool {
 	return !matched
 }
 
+var basictype = map[string]int{
+	"signed": 1,
+}
+
 func (node *NonStarExpr) Format(buf *TrackedBuffer) {
 	buf.Fprintf("%v", node.Expr)
 	if node.As != nil {
+		if _, ok := basictype[string(node.As)]; ok {
+			buf.Fprintf(" %s", node.As)
+			return
+		}
 		_, iskeyword := keywords[string(node.As)]
 		if containerOther(node.As) || iskeyword {
 			buf.Fprintf(" `%s`", node.As)
