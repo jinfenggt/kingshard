@@ -20,6 +20,7 @@ package sqlparser
 
 import (
 	"errors"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -285,10 +286,22 @@ type NonStarExpr struct {
 	As   []byte
 }
 
+var otherreg, _ = regexp.Compile("^[0-9A-Za-z+-]+$")
+
+func containerOther(str []byte) bool {
+	matched := otherreg.Match(str)
+	return !matched
+}
+
 func (node *NonStarExpr) Format(buf *TrackedBuffer) {
 	buf.Fprintf("%v", node.Expr)
 	if node.As != nil {
-		buf.Fprintf(" %s", node.As)
+		_, iskeyword := keywords[string(node.As)]
+		if containerOther(node.As) || iskeyword {
+			buf.Fprintf(" `%s`", node.As)
+		} else {
+			buf.Fprintf(" %s", node.As)
+		}
 	}
 }
 
