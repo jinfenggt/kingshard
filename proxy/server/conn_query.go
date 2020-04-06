@@ -450,6 +450,9 @@ func (c *ClientConn) mergeExecResult(rs []*mysql.Result) error {
 }
 
 func notifyCheelah(err error, errtype string, sql string, duration float64, userID string, hash string, uuid string) {
+	if len(hash) == 0 {
+		return
+	}
 	if err == nil && duration < 20000 {
 		return
 	}
