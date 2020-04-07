@@ -295,7 +295,10 @@ func containerOther(str []byte) bool {
 
 var basictype = map[string]int{
 	"signed": 1,
-	"rank":   1,
+}
+
+var otherkeywords = map[string]int{
+	"rank": 1,
 }
 
 func (node *NonStarExpr) Format(buf *TrackedBuffer) {
@@ -303,6 +306,10 @@ func (node *NonStarExpr) Format(buf *TrackedBuffer) {
 	if node.As != nil {
 		if _, ok := basictype[string(node.As)]; ok {
 			buf.Fprintf("as %s", node.As)
+			return
+		}
+		if _, ok := otherkeywords[string(node.As)]; ok {
+			buf.Fprintf(" `%s`", node.As)
 			return
 		}
 		_, iskeyword := keywords[string(node.As)]
