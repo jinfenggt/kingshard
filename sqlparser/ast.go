@@ -695,7 +695,11 @@ func escape(buf *TrackedBuffer, name []byte) {
 	if _, ok := keywords[string(name)]; ok {
 		buf.Fprintf("`%s`", name)
 	} else {
-		buf.Fprintf("%s", name)
+		if _, ok := otherkeywords[string(name)]; ok {
+			buf.Fprintf("`%s`", name)
+		} else {
+			buf.Fprintf("%s", name)
+		}
 	}
 }
 
@@ -871,6 +875,7 @@ const (
 )
 
 func (node *Order) Format(buf *TrackedBuffer) {
+	// if _, ok := otherkeywords[node.Expr]
 	buf.Fprintf("%v %s", node.Expr, node.Direction)
 }
 
