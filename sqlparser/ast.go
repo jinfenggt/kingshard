@@ -295,6 +295,7 @@ func containerOther(str []byte) bool {
 
 var basictype = map[string]int{
 	"signed": 1,
+	"rank":   1,
 }
 
 func (node *NonStarExpr) Format(buf *TrackedBuffer) {
