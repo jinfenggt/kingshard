@@ -25,6 +25,7 @@ import (
 	"github.com/flike/kingshard/mysql"
 	"github.com/flike/kingshard/proxy/router"
 	"github.com/flike/kingshard/sqlparser"
+	"go.uber.org/atomic"
 )
 
 type ExecuteDB struct {
@@ -32,6 +33,10 @@ type ExecuteDB struct {
 	IsSlave  bool
 	sql      string
 }
+
+// var goslave bool = false
+
+var goslave = atomic.NewBool(false)
 
 func (c *ClientConn) isBlacklistSql(sql string) bool {
 	fingerprint := mysql.GetFingerprint(sql)
@@ -91,7 +96,9 @@ func (c *ClientConn) preHandleShard(sql string) (bool, error) {
 	if executeDB == nil {
 		return false, nil
 	}
-	executeDB.IsSlave = true
+	tmp := goslave.Load()
+	goslave.Store(!tmp)
+	executeDB.IsSlave = tmp
 	//get connection in DB
 	conn, err := c.getBackendConn(executeDB.ExecNode, executeDB.IsSlave)
 	defer c.closeConn(conn, false)
