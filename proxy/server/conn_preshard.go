@@ -91,6 +91,7 @@ func (c *ClientConn) preHandleShard(sql string) (bool, error) {
 	if executeDB == nil {
 		return false, nil
 	}
+	executeDB.IsSlave = true
 	//get connection in DB
 	conn, err := c.getBackendConn(executeDB.ExecNode, executeDB.IsSlave)
 	defer c.closeConn(conn, false)
