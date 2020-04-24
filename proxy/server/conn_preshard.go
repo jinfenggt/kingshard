@@ -35,7 +35,6 @@ type ExecuteDB struct {
 }
 
 // var goslave bool = false
-
 var goslave = atomic.NewBool(false)
 
 func (c *ClientConn) isBlacklistSql(sql string) bool {
