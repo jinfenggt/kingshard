@@ -86,6 +86,7 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 			buf := sqlparser.NewTrackedBuffer(nil)
 			stmt.Format(buf)
 			sql = string(buf.Bytes())
+			sql = "SELECT * FROM (" + sql + ") a LIMIT 2000"
 			sql = comment + "\n" + sql
 			parsedsql = sql
 			// sql = "SELECT * FROM (" + sql + ") a LIMIT 5000"
