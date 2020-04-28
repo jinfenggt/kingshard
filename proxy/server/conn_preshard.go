@@ -103,7 +103,6 @@ func (c *ClientConn) preHandleShard(sql string) (bool, error) {
 	startTime := time.Now().UnixNano()
 	conn, err := c.getBackendConn(executeDB.ExecNode, executeDB.IsSlave)
 	execTime := float64(time.Now().UnixNano()-startTime) / float64(time.Millisecond)
-	c.dbAddr = conn.GetAddr()
 	c.getConnectionDuration = execTime
 	defer c.closeConn(conn, false)
 	if err != nil {
@@ -111,6 +110,7 @@ func (c *ClientConn) preHandleShard(sql string) (bool, error) {
 	}
 	//execute.sql may be rewritten in getShowExecDB
 	rs, err = c.executeInNode(conn, executeDB.sql, nil)
+	c.dbAddr = conn.GetAddr()
 	if err != nil {
 		return false, err
 	}
