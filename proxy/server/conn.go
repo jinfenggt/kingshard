@@ -66,6 +66,9 @@ type ClientConn struct {
 	stmts map[uint32]*Stmt //prepare相关,client端到proxy的stmt
 
 	configVer uint32 //check config version for reload online
+
+	getConnectionDuration int64
+	dbAddr                string
 }
 
 var DEFAULT_CAPABILITY uint32 = mysql.CLIENT_LONG_PASSWORD | mysql.CLIENT_LONG_FLAG |
@@ -326,8 +329,8 @@ func (c *ClientConn) dispatch(data []byte) error {
 	c.proxy.counter.IncrClientQPS()
 	cmd := data[0]
 	data = data[1:]
-	fmt.Printf("%v\n", cmd)
-	fmt.Println(hack.String(data))
+	// fmt.Printf("%v\n", cmd)
+	// fmt.Println(hack.String(data))
 	switch cmd {
 	case mysql.COM_QUIT:
 		c.handleRollback()

@@ -54,7 +54,7 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 			return
 		}
 	}()
-
+	fmt.Println("Current Connections: ", c.proxy.counter.ClientConns)
 	sql = strings.TrimRight(sql, ";") //删除sql语句最后的分号
 	pat, err := regexp.Compile("-- Metabase:: userID: ([0-9]+) queryType: ([A-Za-z]+) queryHash: ([A-Za-z0-9]+)")
 	arr := pat.FindAllSubmatch([]byte(sql), -1)
@@ -72,10 +72,12 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 	parsedsql := sql
 	comment := "-- mysqlproxy uniqueID: " + uuidstr
 	sql = comment + "\n" + sql
+	var rows int64
+	// var addr string
 	defer func() {
 		if neednotify {
 			execTime := float64(time.Now().UnixNano()-startTime) / float64(time.Millisecond)
-			go notifyCheelah(execErr, errtype, parsedsql, execTime, userID, hash, uuidstr)
+			go notifyCheelah(execErr, errtype, parsedsql, execTime, userID, hash, uuidstr, rows, c.dbAddr, c.getConnectionDuration, c.proxy.counter.ClientConns)
 		}
 	}()
 	// var stmt sqlparser.Statement
@@ -99,6 +101,7 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 		errtype = "parse-error"
 	}
 	hasHandled, err := c.preHandleShard(sql)
+	// c.conn
 	if err != nil {
 		golog.Error("server", "preHandleShard", err.Error(), 0,
 			"sql", sql,
@@ -109,6 +112,8 @@ func (c *ClientConn) handleQuery(sql string) (err error) {
 		return err
 	}
 	if hasHandled {
+		rows = c.affectedRows
+		// addr = c.proxy.addr
 		return nil
 	}
 
@@ -450,7 +455,7 @@ func (c *ClientConn) mergeExecResult(rs []*mysql.Result) error {
 	return c.writeOK(r)
 }
 
-func notifyCheelah(err error, errtype string, sql string, duration float64, userID string, hash string, uuid string) {
+func notifyCheelah(err error, errtype string, sql string, duration float64, userID string, hash string, uuid string, rows int64, addr string, connectionTime int64, connectCount int64) {
 	if len(hash) == 0 {
 		return
 	}
@@ -459,12 +464,16 @@ func notifyCheelah(err error, errtype string, sql string, duration float64, user
 	}
 	data := map[string]interface{}{
 		// "msg":      msg,
-		"duration": duration,
-		"userId":   userID,
-		"hash":     hash,
-		"uuid":     uuid,
-		"type":     errtype,
-		"sql":      sql,
+		"duration":       duration,
+		"userId":         userID,
+		"hash":           hash,
+		"uuid":           uuid,
+		"type":           errtype,
+		"sql":            sql,
+		"rows":           rows,
+		"addr":           addr,
+		"connectionTime": connectionTime,
+		"connectCount":   connectCount,
 	}
 	if err != nil {
 		data["msg"] = err.Error()

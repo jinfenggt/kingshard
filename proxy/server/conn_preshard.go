@@ -17,6 +17,7 @@ package server
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/flike/kingshard/backend"
 	"github.com/flike/kingshard/core/errors"
@@ -99,7 +100,11 @@ func (c *ClientConn) preHandleShard(sql string) (bool, error) {
 	goslave.Store(!tmp)
 	executeDB.IsSlave = tmp
 	//get connection in DB
+	startTime := time.Now().UnixNano()
 	conn, err := c.getBackendConn(executeDB.ExecNode, executeDB.IsSlave)
+	execTime := time.Now().UnixNano() - startTime
+	c.dbAddr = conn.GetAddr()
+	c.getConnectionDuration = execTime
 	defer c.closeConn(conn, false)
 	if err != nil {
 		return false, err
