@@ -67,7 +67,7 @@ type ClientConn struct {
 
 	configVer uint32 //check config version for reload online
 
-	getConnectionDuration int64
+	getConnectionDuration float64
 	dbAddr                string
 }
 

@@ -455,7 +455,7 @@ func (c *ClientConn) mergeExecResult(rs []*mysql.Result) error {
 	return c.writeOK(r)
 }
 
-func notifyCheelah(err error, errtype string, sql string, duration float64, userID string, hash string, uuid string, rows int64, addr string, connectionTime int64, connectCount int64) {
+func notifyCheelah(err error, errtype string, sql string, duration float64, userID string, hash string, uuid string, rows int64, addr string, connectionTime float64, connectCount int64) {
 	if len(hash) == 0 {
 		return
 	}
