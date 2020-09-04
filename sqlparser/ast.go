@@ -298,7 +298,8 @@ var basictype = map[string]int{
 }
 
 var otherkeywords = map[string]int{
-	"rank": 1,
+	"rank":  1,
+	"usage": 1,
 }
 
 func (node *NonStarExpr) Format(buf *TrackedBuffer) {
