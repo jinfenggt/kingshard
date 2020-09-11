@@ -368,6 +368,8 @@ func (node *AliasedTableExpr) Format(buf *TrackedBuffer) {
 	buf.Fprintf("%v", node.Expr)
 	if node.As != nil {
 		buf.Fprintf(" as %s", node.As)
+	} else {
+		buf.Fprintf(" as `%v`", node.Expr)
 	}
 	if node.Hints != nil {
 		// Hint node provides the space padding.
