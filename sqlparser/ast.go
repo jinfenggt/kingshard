@@ -370,7 +370,7 @@ func (node *AliasedTableExpr) Format(buf *TrackedBuffer) {
 		buf.Fprintf(" as %s", node.As)
 	} else {
 		if v, ok := node.Expr.(*TableName); ok {
-			buf.Fprintf(" as `%v`", v.Name)
+			buf.Fprintf(" as `%s`", v.Name)
 		}
 	}
 	if node.Hints != nil {
@@ -602,6 +602,15 @@ const (
 )
 
 func (node *RangeCond) Format(buf *TrackedBuffer) {
+	if v, ok := node.To.(StrVal); ok {
+		str := string(v)
+		if strings.HasSuffix(string(v), "00:00:00") {
+			str = strings.TrimSuffix(str, "00:00:00")
+			str += "23:59:59"
+			buf.Fprintf("%v %s %v and %s", node.Left, node.Operator, node.From, str)
+			return
+		}
+	}
 	buf.Fprintf("%v %s %v and %v", node.Left, node.Operator, node.From, node.To)
 }
 
