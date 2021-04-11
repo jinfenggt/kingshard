@@ -485,7 +485,7 @@ func notifyCheelah(err error, errtype string, sql string, duration float64, user
 		data["msg"] = err.Error()
 	}
 	jsonStr, _ := json.Marshal(data)
-	req, err := http.NewRequest("POST", "http://10.1.1.203:5800/api/internal/proxyerror", bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", "http://10.11.15.13:5800/api/internal/proxyerror", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		fmt.Printf("notify cheelah [%s] error: %s\n", string(jsonStr), err.Error())
 		return
